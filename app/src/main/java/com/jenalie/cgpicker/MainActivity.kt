@@ -1,7 +1,10 @@
 package com.jenalie.cgpicker
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -63,30 +66,98 @@ private fun pct(x: Double) = "${(x * 100).roundToInt()}%"
 
 class MainActivity : ComponentActivity() {
 
+    private var waitingForOverlayPermission = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val openTracker = intent.getBooleanExtra(EXTRA_OPEN_TRACKER, false)
+
+        // Launching the app = start the floating picker over whatever is on screen, then get out of the way.
+        if (!openTracker && Settings.canDrawOverlays(this)) {
+            startFloatingPicker()
+            return
+        }
+
         val prefs = getSharedPreferences("cg_picker", Context.MODE_PRIVATE)
 
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Gold, background = Bg, surface = Panel)) {
                 Surface(modifier = Modifier.fillMaxSize(), color = Bg) {
-                    PickerScreen(
-                        initialHistory = ColorStats.decode(prefs.getString(KEY_HISTORY, null)),
-                        initialWindow = prefs.getInt(KEY_WINDOW, 20),
-                        initialShowTop = prefs.getBoolean(KEY_SHOW_TOP, true),
-                        onHistoryChanged = { prefs.edit().putString(KEY_HISTORY, ColorStats.encode(it)).apply() },
-                        onWindowChanged = { prefs.edit().putInt(KEY_WINDOW, it).apply() },
-                        onShowTopChanged = { prefs.edit().putBoolean(KEY_SHOW_TOP, it).apply() },
-                    )
+                    var showTracker by remember { mutableStateOf(openTracker) }
+                    if (showTracker) {
+                        PickerScreen(
+                            initialHistory = ColorStats.decode(prefs.getString(KEY_HISTORY, null)),
+                            initialWindow = prefs.getInt(KEY_WINDOW, 20),
+                            initialShowTop = prefs.getBoolean(KEY_SHOW_TOP, true),
+                            onHistoryChanged = { prefs.edit().putString(KEY_HISTORY, ColorStats.encode(it)).apply() },
+                            onWindowChanged = { prefs.edit().putInt(KEY_WINDOW, it).apply() },
+                            onShowTopChanged = { prefs.edit().putBoolean(KEY_SHOW_TOP, it).apply() },
+                        )
+                    } else {
+                        OverlayPermissionScreen(
+                            onAllow = {
+                                waitingForOverlayPermission = true
+                                startActivity(
+                                    Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                                )
+                            },
+                            onOpenTracker = { showTracker = true },
+                        )
+                    }
                 }
             }
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Back from the "Display over other apps" settings screen.
+        if (waitingForOverlayPermission && Settings.canDrawOverlays(this)) {
+            waitingForOverlayPermission = false
+            startFloatingPicker()
+        }
+    }
+
+    private fun startFloatingPicker() {
+        OverlayService.start(this)
+        finish()
+    }
+
     companion object {
+        /** Open the full tracker instead of starting the floating picker. */
+        const val EXTRA_OPEN_TRACKER = "open_tracker"
         private const val KEY_HISTORY = "history"
         private const val KEY_WINDOW = "window"
         private const val KEY_SHOW_TOP = "show_top"
+    }
+}
+
+@Composable
+private fun OverlayPermissionScreen(onAllow: () -> Unit, onOpenTracker: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(28.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("CG Picker", color = Gold, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "To float on top of the Color Game, CG Picker needs permission to display over other apps.",
+            color = Color.White, fontSize = 16.sp, textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "On the next screen, turn on \"Allow display over other apps\" for CG Picker, then come back.",
+            color = Muted, fontSize = 13.sp, textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(22.dp))
+        Button(
+            onClick = onAllow,
+            colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color(0xFF3A0008)),
+        ) { Text("Allow floating picker", fontWeight = FontWeight.Bold) }
+        TextButton(onClick = onOpenTracker) { Text("Open tracker instead", color = Muted) }
     }
 }
 

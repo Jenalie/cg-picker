@@ -1,5 +1,7 @@
 package com.jenalie.cgpicker
 
+import kotlin.random.Random
+
 /** The six colors on the Color Game dice, in the same order as the betting board. */
 enum class GameColor(val label: String, val argb: Long, val darkText: Boolean) {
     YELLOW("Yellow", 0xFFFFD600, true),
@@ -85,6 +87,13 @@ object ColorStats {
             )
         }
     }
+
+    /**
+     * Three different colors drawn at random, in board order. No history needed: with fair dice
+     * every color has the same chance, so any 3 colors are as good as any other 3.
+     */
+    fun quickPicks(random: Random = Random.Default): List<GameColor> =
+        GameColor.values().toList().shuffled(random).take(3).sortedBy { it.ordinal }
 
     /** Top [k] colors by weighted score; ties broken by most recently seen, then board order. */
     fun topColors(stats: List<ColorStat>, k: Int = 3): List<GameColor> =

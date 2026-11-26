@@ -10,3 +10,6 @@
 .cxx/
 *.apk
 *.aab
+
+# Raw game screenshots (contain account details)
+images/

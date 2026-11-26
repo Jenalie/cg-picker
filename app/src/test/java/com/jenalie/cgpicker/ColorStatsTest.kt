@@ -2,7 +2,9 @@ package com.jenalie.cgpicker
 
 import com.jenalie.cgpicker.GameColor.*
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
 class ColorStatsTest {
 
@@ -29,6 +31,22 @@ class ColorStatsTest {
         val top = ColorStats.topColors(ColorStats.compute(history, window = 0))
         assertEquals(PINK, top.first())
         assertEquals(3, top.size)
+    }
+
+    @Test fun quickPicksAreThreeDistinctColorsInBoardOrder() {
+        val rnd = Random(42)
+        repeat(200) {
+            val picks = ColorStats.quickPicks(rnd)
+            assertEquals(3, picks.size)
+            assertEquals(3, picks.toSet().size)
+            assertEquals(picks.sortedBy { it.ordinal }, picks)
+        }
+    }
+
+    @Test fun quickPicksCanPickEveryColor() {
+        val rnd = Random(7)
+        val seen = (1..200).flatMap { ColorStats.quickPicks(rnd) }.toSet()
+        assertTrue(seen.containsAll(GameColor.values().toList()))
     }
 
     @Test fun encodeDecodeRoundTrip() {
