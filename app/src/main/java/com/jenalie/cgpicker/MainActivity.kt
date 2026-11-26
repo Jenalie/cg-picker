@@ -141,9 +141,9 @@ fun PickerScreen(
         Card {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Top 3 colors", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Colors to bet on", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        "Most frequent in the last $windowSize rounds",
+                        "Picked from the most frequent colors in the last $windowSize rounds",
                         color = Muted, fontSize = 12.sp,
                     )
                 }
@@ -167,9 +167,21 @@ fun PickerScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         top.forEachIndexed { i, color ->
                             val s = stats.first { it.color == color }
-                            TopChip(rank = i + 1, color = color, hitRate = s.hitRate, modifier = Modifier.weight(1f))
+                            TopChip(rank = i + 1, color = color, recentHitRate = s.hitRate, modifier = Modifier.weight(1f))
                         }
                     }
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "If you bet the same amount on all 3:",
+                        color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "At least one wins: ${pct(ColorStats.THREE_PICKS_ANY_HIT)}  •  " +
+                            "You end up ahead: ${pct(ColorStats.THREE_PICKS_AHEAD)}  •  " +
+                            "Break even: ${pct(ColorStats.THREE_PICKS_EVEN)}  •  " +
+                            "You lose money: ${pct(ColorStats.THREE_PICKS_BEHIND)}",
+                        color = Muted, fontSize = 12.sp,
+                    )
                 }
             }
         }
@@ -310,7 +322,7 @@ fun PickerScreen(
         Text(
             "Heads-up: if the dice are fair, every round is independent. Each color has a " +
                 "${pct(ColorStats.FAIR_HIT_RATE)} chance to show on at least one die, no matter " +
-                "what happened before. \"Top 3\" shows what has come up most often recently. " +
+                "what happened before. The picks show what has come up most often recently. " +
                 "It is not a guarantee, and no app can predict the next roll. Set a limit and only play with money you can afford to lose.",
             color = Muted.copy(alpha = 0.85f),
             fontSize = 12.sp,
@@ -346,7 +358,7 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun TopChip(rank: Int, color: GameColor, hitRate: Double, modifier: Modifier = Modifier) {
+private fun TopChip(rank: Int, color: GameColor, recentHitRate: Double, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -357,7 +369,8 @@ private fun TopChip(rank: Int, color: GameColor, hitRate: Double, modifier: Modi
     ) {
         Text("#$rank", color = color.onColor(), fontSize = 13.sp, fontWeight = FontWeight.Bold)
         Text(color.label, color = color.onColor(), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
-        Text("in ${pct(hitRate)} of rounds", color = color.onColor(), fontSize = 11.sp)
+        Text("${pct(ColorStats.FAIR_HIT_RATE)} win chance", color = color.onColor(), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text("recent: ${pct(recentHitRate)}", color = color.onColor(), fontSize = 11.sp)
     }
 }
 

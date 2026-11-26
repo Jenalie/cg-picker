@@ -36,6 +36,16 @@ object ColorStats {
     /** Chance a given color shows on at least one of three fair dice: 1 - (5/6)^3 ≈ 42.1%. */
     const val FAIR_HIT_RATE = 1.0 - (5.0 / 6.0) * (5.0 / 6.0) * (5.0 / 6.0)
 
+    /*
+     * Betting 1 unit on each of 3 different colors (1:1 / 2:1 / 3:1 payouts), fair dice:
+     * at least one color hits 189/216 = 87.5%; net result ahead 81/216 = 37.5%,
+     * even 27/216 = 12.5%, behind 108/216 = 50%. Verified by enumerating all 216 rolls.
+     */
+    const val THREE_PICKS_ANY_HIT = 189.0 / 216.0
+    const val THREE_PICKS_AHEAD = 81.0 / 216.0
+    const val THREE_PICKS_EVEN = 27.0 / 216.0
+    const val THREE_PICKS_BEHIND = 108.0 / 216.0
+
     /** Chance a given color shows on one fair die: 1/6 ≈ 16.7%. */
     const val FAIR_DICE_SHARE = 1.0 / 6.0
 
