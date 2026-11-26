@@ -1,8 +1,6 @@
 package com.jenalie.cgpicker
 
 import com.jenalie.cgpicker.GameColor.*
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -11,11 +9,11 @@ class ResultStripTest {
 
     /** Half-size Casino Plus screenshots with everything except the results strip blacked out. */
     private fun screen(name: String): Pixels {
-        val img: BufferedImage = ImageIO.read(javaClass.classLoader!!.getResource("screens/$name.png"))
+        val img = TestPng.read(javaClass.classLoader!!.getResourceAsStream("screens/$name.png"))
         return object : Pixels {
             override val width = img.width
             override val height = img.height
-            override fun rgb(x: Int, y: Int) = img.getRGB(x, y) and 0xFFFFFF
+            override fun rgb(x: Int, y: Int): Int = img.rgb(x, y)
         }
     }
 
