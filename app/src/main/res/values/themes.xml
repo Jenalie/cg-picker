@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.CgPicker" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#FF4A0A10</item>
+        <item name="android:navigationBarColor">#FF4A0A10</item>
+        <item name="android:windowBackground">#FF4A0A10</item>
+    </style>
+</resources>
